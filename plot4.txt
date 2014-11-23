@@ -1,0 +1,62 @@
+#  Graph Q4: How have emissions from coal combustion-related sources changed from 1999-2008, in the US?
+#  A:
+#  1. Download contents
+#  2. Target source = Coal combustion-related; show trend
+#  SCC_Coal <- unique(grep("Coal",SCC$EI.Sector,value=TRUE))
+#   -> 3 results:
+#  [1] "Fuel Comb - Electric Generation - Coal"     
+#  [2] "Fuel Comb - Industrial Boilers, ICEs - Coal"
+#  [3] "Fuel Comb - Comm/Institutional - Coal" 
+
+#  Initial plot parameters:
+fileUrl="https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
+destFile="d:\\data\\NEI_data.zip"
+pm25File="d:\\data\\NEI_data\\summarySCC_PM25.rds"
+sccFile="d:\\data\\NEI_data\\Source_Classification_Code.rds"
+download.file(fileUrl,destfile = destFile)
+unzip(destFile)
+if (dir("d:\\data\\NEI_data")) { 
+	# inputdata <- read.csv(pm25File, header=TRUE)
+	NEI <- readRDS(pm25File)
+	SCC <- readRDS(sccFile)
+}
+
+#  Report sum of PM25 per observation year, for Baltimore:
+library(dplyr)
+
+#  Target coal-related pm2.5:
+#  1. find the categories in SCC
+SCC_Coal <- SCC[SCC$EI.Sector==grep("Coal",SCC$EI.Sector,value=TRUE),]
+#  List of categories:
+#SCC_Coal$SCC
+
+#  2. Subset NEI with the matching SCC categories associated to Coal
+NEI_Coal <- with(NEI, NEI[NEI$SCC %in% SCC_Coal$SCC,])
+
+#  Graph distinct plots: 
+#  Type 1: Point
+#  Type 1: NonPoint
+#  Type 1: OnRoad
+#  Type 1: NonRoad
+graph4 <- aggregate(NEI_Coal$Emissions,by=list(NEI_Coal$year),FUN=sum)
+
+#  2. Show individual sources' trend
+#  Load graphing:
+library(graphics)
+library(grDevices)
+library(ggplot2)
+
+#  Plot result:
+plot.new()
+p <- qplot(Group.1,x, data=graph4, xlab="Observation year", ylab="pm2.5 Emissions", main="Pm2.5 emissions from coal sources over the years", method="lm", formula=y~x,geom=c("point","smooth") ) 
+p
+
+#  Start plot...
+setwd("d:\\data\\ExplAnalysis\\Prj2")
+png(filename="plot4.png", height=480, width=480, bg="white")
+
+plot.new()
+p <- qplot(Group.1,x, data=graph4, xlab="Observation year", ylab="pm2.5 Emissions", main="Pm2.5 emissions from coal sources over the years", method="lm", formula=y~x,geom=c("point","smooth") ) 
+p
+
+dev.off()

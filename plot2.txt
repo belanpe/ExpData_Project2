@@ -1,0 +1,43 @@
+#  Initial plot parameters:
+fileUrl="https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
+destFile="d:\\data\\NEI_data.zip"
+pm25File="d:\\data\\NEI_data\\summarySCC_PM25.rds"
+sccFile="d:\\data\\NEI_data\\Source_Classification_Code.rds"
+download.file(fileUrl,destfile = destFile)
+unzip(destFile)
+if (dir("d:\\data\\NEI_data")) { 
+	# inputdata <- read.csv(pm25File, header=TRUE)
+	NEI <- readRDS(pm25File)
+	SCC <- readRDS(sccFile)
+}
+summary(NEI)
+class(NEI)
+unique(NEI$type)
+summary(SCC)
+class(SCC)
+unique(SCC$EI.Sector)
+
+#  Report sum of PM25 per observation year, for Baltimore:
+library(dplyr)
+NEI_baltimore <- NEI[NEI$fips==24510,]
+graph2 <- aggregate(NEI_baltimore$Emissions,by=list(NEI_baltimore$year),FUN=sum)
+
+#  2. Show individual sources' trend
+#  Load graphing:
+library(graphics)
+library(grDevices)
+
+library(ggplot)
+#  Start plot...
+setwd("d:\\data\\ExplAnalysis\\Prj2")
+png(filename="plot2.png", height=480, width=480, bg="white")
+#  Group.1 == Year
+#  x == Sum PM25
+plot.new()
+plot(graph2, type="o", ylab="PM25",xlab="Year",pch=22 )
+#  Setup Y labels/annotations
+#axis(2,las=1,at=0:5)
+axis(1,at=c(1,2,3,4),lab=c("1999","2002","2005","2008"))
+title(main="Baltimore PM 2.5 Emissions per observation year")
+box()
+dev.off()

@@ -1,0 +1,42 @@
+#  Initial plot parameters:
+fileUrl="https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
+destFile="d:\\data\\NEI_data.zip"
+pm25File="d:\\data\\NEI_data\\summarySCC_PM25.rds"
+sccFile="d:\\data\\NEI_data\\Source_Classification_Code.rds"
+download.file(fileUrl,destfile = destFile)
+unzip(destFile)
+if (dir("d:\\data\\NEI_data")) { 
+	# inputdata <- read.csv(pm25File, header=TRUE)
+	NEI <- readRDS(pm25File)
+	SCC <- readRDS(sccFile)
+}
+
+#  Report sum of PM25 per observation year, for Baltimore:
+library(dplyr)
+NEI_baltimore <- NEI[NEI$fips==24510,]
+
+#  Graph distinct plots: 
+#  Type 1: Point
+#  Type 1: NonPoint
+#  Type 1: OnRoad
+#  Type 1: NonRoad
+graph3.0 <- aggregate(NEI_baltimore$Emissions,by=list(NEI_baltimore$year,NEI_baltimore$type),FUN=sum)
+
+#  2. Show individual sources' trend
+#  Load graphing:
+library(graphics)
+library(grDevices)
+library(ggplot2)
+
+#  Plot result with facets:
+#p <- qplot(Group.1,x, data=graph3.0, color=Group.2, xlab="Observation year", ylab="pm2.5 Emissions", main="Regression of pm2.5 emissions per type, Baltimore", method="lm", facets=. ~ Group.2, formula=y~x,geom=c("point","smooth") )
+#p
+
+#  Start plot...
+setwd("d:\\data\\ExplAnalysis\\Prj2")
+plot.new()
+png(filename="plot3.png", height=480, width=720, bg="white")
+p <- qplot(Group.1,x, data=graph3.0, color=Group.2, xlab="Observation year", ylab="pm2.5 Emissions", main="Regression of pm2.5 emissions per type, Baltimore", method="lm", facets=. ~ Group.2, formula=y~x,geom=c("point","smooth") ) 
+p
+
+dev.off()

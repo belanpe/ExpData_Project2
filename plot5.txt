@@ -1,0 +1,62 @@
+#  Q5: How have emission from motor vehicle changed in Baltimore (fips=24510)?
+#  A:
+#  1. Download contents
+#  2. Target fips = 24510; show trend
+
+#  Initial plot parameters:
+fileUrl="https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
+destFile="d:\\data\\NEI_data.zip"
+pm25File="d:\\data\\NEI_data\\summarySCC_PM25.rds"
+sccFile="d:\\data\\NEI_data\\Source_Classification_Code.rds"
+download.file(fileUrl,destfile = destFile)
+unzip(destFile)
+if (dir("d:\\data\\NEI_data")) { 
+	# inputdata <- read.csv(pm25File, header=TRUE)
+	NEI <- readRDS(pm25File)
+	SCC <- readRDS(sccFile)
+}
+
+#  Report sum of PM25 per observation year, for Baltimore:
+library(dyplr)
+
+#  Target coal-related pm2.5:
+#  1. find the categories in SCC
+SCC_mv <- SCC[SCC$EI.Sector==grep("On-Road",SCC$EI.Sector,value=TRUE),]
+#  List of categories:
+# SCC_mv$SCC
+
+#  2. Subset NEI with the matching SCC categories associated to Baltimore
+NEI_mv <- with(NEI,NEI[NEI$SCC %in% SCC_mv$SCC & NEI$fips=="24510",])
+
+head(NEI_mv[NEI_mv$fips=="24510",])
+head(NEI_mv)
+
+#  Graph distinct plots: 
+#  Type 1: Point
+#  Type 1: NonPoint
+#  Type 1: OnRoad
+#  Type 1: NonRoad
+graph5 <- aggregate(NEI_mv$Emissions,by=list(NEI_mv$year),FUN=sum)
+
+#  2. Show individual sources' trend
+#  Load graphing:
+library(graphics)
+library(grDevices)
+library(ggplot2)
+
+#  Plot result:
+plot.new()
+s
+#qplot(Group.1,x, data=graph4,xlab="Observation year",ylab="Emissions of pm2.5", main="Emissions of pm2.5 from coal sources",method="lm",formula=y~x,geom=c("point","line") )
+p <- qplot(Group.1,x, data=graph5, xlab="Observation year", ylab="pm2.5 Emissions", main="Pm2.5 emissions from motor vehicles in Baltimore (24510)", method="lm", formula=y~x,geom=c("point","smooth") ) 
+p
+
+#  Start plot...
+setwd("d:\\data\\ExplAnalysis\\Prj2")
+png(filename="plot5.png", height=480, width=480, bg="white")
+
+plot.new()
+p <- qplot(Group.1,x, data=graph5, xlab="Observation year", ylab="pm2.5 Emissions", main="Pm2.5 emissions from motor vehicles in Baltimore (24510)", method="lm", formula=y~x,geom=c("point","smooth") ) 
+p
+
+dev.off()

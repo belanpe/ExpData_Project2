@@ -1,0 +1,57 @@
+#  Q6: Compare motor vehicle emissions from Baltimore to Los Angeles (fips=06037)?
+#  A:
+#  1. Download contents
+#  2. Target fips = 24510 + fips = 06037; show trends of both on a single graph
+#
+
+#  Initial plot parameters:
+fileUrl="https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
+destFile="d:\\data\\NEI_data.zip"
+pm25File="d:\\data\\NEI_data\\summarySCC_PM25.rds"
+sccFile="d:\\data\\NEI_data\\Source_Classification_Code.rds"
+download.file(fileUrl,destfile = destFile)
+unzip(destFile)
+if (dir("d:\\data\\NEI_data")) { 
+	# inputdata <- read.csv(pm25File, header=TRUE)
+	NEI <- readRDS(pm25File)
+	SCC <- readRDS(sccFile)
+}
+
+#  Report sum of PM25 per observation year, for Baltimore:
+library(dyplr)
+
+#  Target coal-related pm2.5:
+#  1. find the categories in SCC
+SCC_mv <- SCC[SCC$EI.Sector==grep("On-Road",SCC$EI.Sector,value=TRUE),]
+#  List of categories:
+# SCC_mv$SCC
+
+#  2. Subset NEI with the matching SCC categories associated to Coal
+NEI_mv <- with(NEI,NEI[NEI$SCC %in% SCC_mv$SCC & ( NEI$fips=="24510" | NEI$fips =="06037"),])
+
+#  Graph distinct plots: 
+graph6 <- aggregate(NEI_mv$Emissions,by=list(NEI_mv$year,NEI_mv$fips),FUN=sum)
+
+#  2. Show individual sources' trend
+#  Load graphing:
+library(graphics)
+library(grDevices)
+library(ggplot2)
+
+#  Plot result:
+plot.new()
+
+p <- qplot(Group.1,x, data=graph6, xlab="Observation year", ylab="pm2.5 Emissions", main="Pm2.5 emissions from motor vehicles, Los Angeles (06037) and Baltimore (24510)", method="lm", formula=y~x, geom=c("point","smooth"), facets=. ~Group.2 )
+p + facet_wrap( x ~ Group.2, scales="free" )
+p
+
+#  Start plot...
+setwd("d:\\data\\ExplAnalysis\\Prj2")
+png(filename="plot6.png", height=480, width=600, bg="white")
+
+plot.new()
+p <- qplot(Group.1,x, data=graph6, xlab="Observation year", ylab="pm2.5 Emissions", main="Pm2.5 emissions from motor vehicles, Los Angeles (06037) and Baltimore (24510)", method="lm", formula=y~x, geom=c("point","smooth"), facets=. ~Group.2 )
+p + facet_wrap( x ~ Group.2, scales="free" )
+p
+
+dev.off()
